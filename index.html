@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puti-AI 教育用提示詞助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .part-block {
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .part-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+        .part-header h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .hint-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .hint-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        textarea {
+            width: 100%;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            resize: vertical;
+            min-height: 80px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <main class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Puti-AI 教育用提示詞助手</h1>
+            <p class="text-gray-600 mt-2">使用 PARTS 框架，像堆積木一樣，打造高品質的 AI 提示詞！</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Side: PARTS Inputs -->
+            <div>
+                <!-- P: Persona -->
+                <div class="part-block bg-blue-500">
+                    <div class="part-header">
+                        <h3>P: 定義角色 (Persona)</h3>
+                        <button class="hint-btn" onclick="showHint('P')">提示我</button>
+                    </div>
+                    <textarea id="persona" placeholder="你是一位..." oninput="updatePreview()"></textarea>
+                </div>
+
+                <!-- A: Action -->
+                <div class="part-block bg-orange-500">
+                    <div class="part-header">
+                        <h3>A: 指定行動 (Action)</h3>
+                        <button class="hint-btn" onclick="showHint('A')">提示我</button>
+                    </div>
+                    <textarea id="action" placeholder="請為我撰寫一篇..." oninput="updatePreview()"></textarea>
+                </div>
+
+                <!-- R: Recipient -->
+                <div class="part-block bg-purple-500">
+                    <div class="part-header">
+                        <h3>R: 設定受眾 (Recipient)</h3>
+                        <button class="hint-btn" onclick="showHint('R')">提示我</button>
+                    </div>
+                    <textarea id="recipient" placeholder="給...看的" oninput="updatePreview()"></textarea>
+                </div>
+
+                <!-- T: Topic -->
+                <div class="part-block bg-green-500">
+                    <div class="part-header">
+                        <h3>T: 提供主題 (Topic)</h3>
+                        <button class="hint-btn" onclick="showHint('T')">提示我</button>
+                    </div>
+                    <textarea id="topic" placeholder="主題是關於..." oninput="updatePreview()"></textarea>
+                </div>
+                
+                <!-- S: Structure -->
+                <div class="part-block bg-gray-500">
+                    <div class="part-header">
+                        <h3>S: 規範結構 (Structure)</h3>
+                        <button class="hint-btn" onclick="showHint('S')">提示我</button>
+                    </div>
+                    <textarea id="structure" placeholder="格式為..." oninput="updatePreview()"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Side: Preview, Refine, and Suggestions -->
+            <div>
+                 <!-- Preview & Refine -->
+                 <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. 提示詞預覽與編輯</h3>
+                    <textarea id="preview" class="min-h-[200px] bg-gray-50"></textarea>
+                    <div class="mt-4 flex justify-center gap-4">
+                        <button id="refine-btn" class="action-btn bg-indigo-600 hover:bg-indigo-700" onclick="refinePrompt()">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
+                            <span>AI 潤飾提示詞</span>
+                        </button>
+                        <button id="copy-btn" class="action-btn bg-gray-500 hover:bg-gray-600" onclick="copyResult()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                            <span id="copy-text">複製提示詞</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prompt Suggestions -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">提示詞建議</h3>
+                    <div id="result-container" class="mt-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 min-h-[200px] p-1 sm:p-2">
+                        <div class="flex items-center justify-center h-full text-gray-500 p-4 text-center">在這裡，AI 會根據上方的提示詞，提供加深、加廣或延伸的建議。</div>
+                    </div>
+                    <div class="mt-4 flex justify-center items-center gap-4">
+                        <button id="suggestion-btn" class="action-btn bg-teal-500 hover:bg-teal-600" onclick="getPromptSuggestions()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            <span>取得建議</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Hint Modal -->
+    <div id="hint-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-800" onclick="closeHint()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h2 id="hint-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+            <p id="hint-content" class="text-gray-600"></p>
+        </div>
+    </div>
+
+
+    <script>
+        const hints = {
+            'P': {
+                title: 'P: 定義角色 (Persona)',
+                content: '設定 AI 的身份、專業或風格。讓它知道該從哪個角度來回應。\n\n例如：「你是一位專業的國小自然科老師」、「你是一位富有創意的廣告文案寫手」、「你是一位能將複雜概念簡單化的專家」。'
+            },
+            'A': {
+                title: 'A: 指定行動 (Action)',
+                content: '明確告訴 AI 你需要它做什麼。動詞越精確越好。\n\n例如：「請為我撰寫一篇」、「幫我分析這段文字」、「請給我 5 個點子」、「請將下列內容翻譯成英文」。'
+            },
+            'R': {
+                title: 'R: 設定受眾 (Recipient)',
+                content: '告訴 AI 這些內容是為誰準備的。這會影響 AI 使用的語氣、詞彙和深度。\n\n例如：「給國小三年級的學生看」、「給完全沒有程式背景的初學者」、「給公司的行銷部門主管」。'
+            },
+            'T': {
+                title: 'T: 提供主題 (Topic)',
+                content: '提供具體的主題、關鍵字和相關背景資訊。你給的資訊越豐富，AI 的回答就越貼切。\n\n例如：「主題是關於『光合作用』」、「內容要包含 AI 在醫療領域的應用」、「主題是台灣的夜市文化」。'
+            },
+            'S': {
+                title: 'S: 規範結構 (Structure)',
+                content: '指定回應的格式、長度或風格。讓 AI 的產出更符合你的需求。\n\n例如：「格式為條列式說明」、「請用一個表格來呈現」、「總字數約 300 字」、「語氣要活潑有趣」。'
+            }
+        };
+
+        function showHint(part) {
+            const hintData = hints[part];
+            document.getElementById('hint-title').innerText = hintData.title;
+            document.getElementById('hint-content').innerText = hintData.content;
+            document.getElementById('hint-modal').classList.remove('hidden');
+        }
+
+        function closeHint() {
+            document.getElementById('hint-modal').classList.add('hidden');
+        }
+
+        function updatePreview() {
+            const persona = document.getElementById('persona').value.trim();
+            const action = document.getElementById('action').value.trim();
+            const recipient = document.getElementById('recipient').value.trim();
+            const topic = document.getElementById('topic').value.trim();
+            const structure = document.getElementById('structure').value.trim();
+
+            const promptParts = [persona, action, recipient, topic, structure];
+            const fullPrompt = promptParts.filter(p => p).join('\n\n');
+            
+            document.getElementById('preview').value = fullPrompt;
+        }
+
+        async function refinePrompt() {
+            const refineBtn = document.getElementById('refine-btn');
+            const originalBtnHTML = refineBtn.innerHTML;
+            
+            const persona = document.getElementById('persona').value.trim();
+            const action = document.getElementById('action').value.trim();
+            const recipient = document.getElementById('recipient').value.trim();
+            const topic = document.getElementById('topic').value.trim();
+            const structure = document.getElementById('structure').value.trim();
+
+            if (!persona && !action && !topic) {
+                alert('請至少填寫「角色」、「行動」和「主題」欄位，以獲得更好的潤飾效果！');
+                return;
+            }
+
+            refineBtn.disabled = true;
+            refineBtn.innerHTML = '<div class="loader"></div><span>AI 潤飾中...</span>';
+
+            // Meta-prompt to instruct the AI how to refine the user's prompt
+            const metaPrompt = `你是一位提示詞工程專家。你的任務是將以下幾個分散的指令元素，組合成一段通順、流暢、且對 AI 更友善的完整提示詞。
+
+以下是使用者提供的指令元素：
+- **扮演角色 (Persona):** ${persona || '未指定'}
+- **執行動作 (Action):** ${action || '未指定'}
+- **目標受眾 (Recipient):** ${recipient || '未指定'}
+- **核心主題 (Topic):** ${topic || '未指定'}
+- **格式要求 (Structure):** ${structure || '未指定'}
+
+請直接生成最終的提示詞內容，不要包含任何前言、標題或解釋性文字 (例如不要說「好的，這是一個...」或「生成的提示詞如下：」)。`;
+
+            // Gemini API Call
+            const apiKey = "AIzaSyCBH8v3XRvOJJAkrFkvocbp4IaFCOuRxh0"; // API Key will be handled by the environment.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: metaPrompt }] }],
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API 請求失敗: ${response.status} ${response.statusText}. ${errorData?.error?.message || ''}`);
+                }
+
+                const result = await response.json();
+                const refinedPromptText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (refinedPromptText) {
+                    document.getElementById('preview').value = refinedPromptText;
+                } else {
+                    alert('AI 潤飾失敗，沒有收到有效的回應。');
+                }
+            } catch (error) {
+                console.error('調用 AI 潤飾提示詞時發生錯誤:', error);
+                alert(`潤飾提示詞時發生錯誤。\n錯誤訊息：${error.message}`);
+            } finally {
+                refineBtn.disabled = false;
+                refineBtn.innerHTML = originalBtnHTML;
+            }
+        }
+
+        async function getPromptSuggestions() {
+            const suggestionBtn = document.getElementById('suggestion-btn');
+            const resultContainer = document.getElementById('result-container');
+            const originalBtnHTML = suggestionBtn.innerHTML;
+
+            const currentPrompt = document.getElementById('preview').value.trim();
+            if (!currentPrompt) {
+                alert('提示詞是空的，請先潤飾或編輯提示詞，才能取得建議！');
+                return;
+            }
+
+            suggestionBtn.disabled = true;
+            suggestionBtn.innerHTML = '<div class="loader"></div><span>AI 思考中...</span>';
+            resultContainer.innerHTML = '<div class="flex justify-center items-center h-full"><div class="loader"></div></div>';
+            resultContainer.style.textAlign = "center";
+
+            const metaPrompt = `你是一位世界級的提示詞工程師。你的任務是分析使用者提供的以下提示詞，並提出 3 到 5 個具體的建議，幫助使用者將這個提示詞變得更強大、更精準。
+
+你的建議應該朝著以下幾個方向思考：
+- **加深細節：** 還有哪些可以補充的背景資訊、上下文或具體要求？
+- **擴展廣度：** 是否可以從其他角度切入？或增加比較的面向？
+- **延伸探索：** 有沒有其他相關的、使用者可能沒想到的有趣方向可以探索？
+- **明確限制：** 如何讓格式、語氣、長度的要求更明確？
+
+請以條列式的方式提供你的建議，並簡要說明每個建議的好處。每個建議都必須以 "*" 開頭。
+
+重要：請直接提供條列式的建議內容，不要包含任何前言、開場白或解釋性文字 (例如不要說「好的，作為一位...」或「針對您目前的提示詞...」)。
+
+---
+使用者目前的提示詞如下：
+${currentPrompt}
+---`;
+
+            // Gemini API Call
+            const apiKey = "AIzaSyCBH8v3XRvOJJAkrFkvocbp4IaFCOuRxh0"; // API Key will be handled by the environment.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: metaPrompt }]
+                }],
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API 請求失敗: ${response.status} ${response.statusText}. ${errorData?.error?.message || ''}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    resultContainer.innerHTML = ''; // Clear loader
+                    const suggestions = generatedText.split('\n').filter(s => s.trim().startsWith('*'));
+
+                    if (suggestions.length === 0) {
+                        resultContainer.innerText = 'AI 提供的建議格式有誤，或沒有有效的建議。';
+                        return;
+                    }
+
+                    suggestions.forEach(suggestionText => {
+                        const cleanText = suggestionText.replace(/^\*\s*/, '').trim();
+
+                        const suggestionEl = document.createElement('div');
+                        suggestionEl.className = 'flex items-center justify-between p-3 mb-2 bg-gray-100 rounded-lg transition-all duration-300';
+                        
+                        const textEl = document.createElement('p');
+                        textEl.className = 'text-gray-800 flex-1 mr-4 text-sm';
+                        textEl.innerText = cleanText;
+
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'action-btn bg-teal-500 hover:bg-teal-600 text-xs py-1 px-3 flex-shrink-0';
+                        addBtn.innerText = '加入';
+                        addBtn.onclick = (event) => {
+                            addSuggestionToPrompt(cleanText);
+                            event.target.innerText = '已加入';
+                            event.target.disabled = true;
+                            event.target.classList.remove('bg-teal-500', 'hover:bg-teal-600');
+                            event.target.classList.add('bg-gray-400', 'cursor-not-allowed');
+                        };
+
+                        suggestionEl.appendChild(textEl);
+                        suggestionEl.appendChild(addBtn);
+                        resultContainer.appendChild(suggestionEl);
+                    });
+                } else {
+                    resultContainer.innerText = 'AI 沒有回傳有效的建議，請稍後再試。';
+                }
+            } catch (error) {
+                console.error('調用 AI 取得建議時發生錯誤:', error);
+                resultContainer.innerText = `發生錯誤，無法取得建議。\n錯誤訊息：${error.message}`;
+            } finally {
+                resultContainer.style.textAlign = "left";
+                suggestionBtn.disabled = false;
+                suggestionBtn.innerHTML = originalBtnHTML;
+            }
+        }
+        
+        function addSuggestionToPrompt(text) {
+            const previewTextarea = document.getElementById('preview');
+            const currentPrompt = previewTextarea.value.trim();
+            if (currentPrompt) {
+                previewTextarea.value = currentPrompt + '\n\n' + text;
+            } else {
+                previewTextarea.value = text;
+            }
+        }
+
+        function copyResult() {
+            const previewTextarea = document.getElementById('preview');
+            const textToCopy = previewTextarea.value.trim();
+            const copyTextSpan = document.getElementById('copy-text');
+
+            if (!textToCopy) {
+                alert('沒有可複製的提示詞！');
+                return;
+            }
+
+            // 使用 document.execCommand 作為備用方案，以應對 iframe 環境限制
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed"; 
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyTextSpan.innerText = '已複製!';
+                setTimeout(() => {
+                    copyTextSpan.innerText = '複製提示詞';
+                }, 2000);
+            } catch (err) {
+                console.error('無法複製文字: ', err);
+                alert('複製失敗，請手動複製。');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // 頁面加載時更新一次預覽
+        window.onload = updatePreview;
+    </script>
+</body>
+</html>
+
